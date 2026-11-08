@@ -13,7 +13,7 @@ A train-ticket booking database for Thai rail routes, being extended step by ste
 | 2 | Generate realistic data (100k bookings) and bulk-load it, with data-quality checks | ✅ Done |
 | 3 | Star-schema warehouse with dbt: 19 models, 66 tests | ✅ Done |
 | 4 | CI with GitHub Actions + dbt docs on GitHub Pages | ✅ Done |
-| 5 | Dashboard: occupancy, route revenue, cancellation rate | Planned |
+| 5 | Streamlit dashboard on the dbt marts ([details](dashboard/)) | ✅ Done |
 
 ## Quick start
 
