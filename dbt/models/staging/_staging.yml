@@ -16,7 +16,8 @@ models:
       - name: train_type
         data_tests:
           - accepted_values:
-              values: ["AC", "FAN"]
+              arguments:
+                values: ["AC", "FAN"]
 
   - name: stg_stations
     columns:
@@ -33,8 +34,9 @@ models:
       - name: station_id
         data_tests:
           - relationships:
-              to: ref('stg_stations')
-              field: station_id
+              arguments:
+                to: ref('stg_stations')
+                field: station_id
 
   - name: stg_schedules
     columns:
@@ -44,8 +46,9 @@ models:
         data_tests:
           - not_null
           - relationships:
-              to: ref('stg_trains')
-              field: train_id
+              arguments:
+                to: ref('stg_trains')
+                field: train_id
 
   - name: stg_bookings
     columns:
@@ -54,17 +57,20 @@ models:
       - name: booking_status
         data_tests:
           - accepted_values:
-              values: ["pending", "confirmed", "cancelled"]
+              arguments:
+                values: ["pending", "confirmed", "cancelled"]
       - name: user_id
         data_tests:
           - relationships:
-              to: ref('stg_users')
-              field: user_id
+              arguments:
+                to: ref('stg_users')
+                field: user_id
       - name: schedule_id
         data_tests:
           - relationships:
-              to: ref('stg_schedules')
-              field: schedule_id
+              arguments:
+                to: ref('stg_schedules')
+                field: schedule_id
 
   - name: stg_tickets
     columns:
@@ -73,8 +79,9 @@ models:
       - name: booking_id
         data_tests:
           - relationships:
-              to: ref('stg_bookings')
-              field: booking_id
+              arguments:
+                to: ref('stg_bookings')
+                field: booking_id
 
   - name: stg_payments
     columns:
@@ -83,8 +90,10 @@ models:
       - name: payment_status
         data_tests:
           - accepted_values:
-              values: ["paid", "failed", "refunded"]
+              arguments:
+                values: ["paid", "failed", "refunded"]
       - name: payment_method
         data_tests:
           - accepted_values:
-              values: ["qr_code", "cash", "credit_card", "mobile_banking"]
+              arguments:
+                values: ["qr_code", "cash", "credit_card", "mobile_banking"]

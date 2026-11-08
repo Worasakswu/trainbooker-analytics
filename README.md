@@ -1,4 +1,5 @@
 # TrainBooker Analytics
+[![CI](https://github.com/Worasakswu/trainbooker-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/Worasakswu/trainbooker-analytics/actions/workflows/ci.yml) · [Live dbt docs & lineage graph](https://worasakswu.github.io/trainbooker-analytics/)
 
 A train-ticket booking database for Thai rail routes, being extended step by step into an end-to-end data engineering project: from a hardened **OLTP database** to a **star-schema warehouse**, **data-quality tests**, **orchestration** and a **dashboard**.
 
@@ -11,7 +12,7 @@ A train-ticket booking database for Thai rail routes, being extended step by ste
 | 1 | Harden the OLTP schema: constraints, triggers, hashed passwords, Docker | ✅ Done |
 | 2 | Generate realistic data (100k bookings) and bulk-load it, with data-quality checks | ✅ Done |
 | 3 | Star-schema warehouse with dbt: 19 models, 66 tests | ✅ Done |
-| 4 | Orchestration (Airflow) + CI with GitHub Actions | ⏳ Next |
+| 4 | CI with GitHub Actions + dbt docs on GitHub Pages | ✅ Done |
 | 5 | Dashboard: occupancy, route revenue, cancellation rate | Planned |
 
 ## Quick start

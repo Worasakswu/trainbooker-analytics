@@ -10,7 +10,8 @@ models:
       - name: holiday_period
         data_tests:
           - accepted_values:
-              values: ["Songkran", "New Year", "Normal"]
+              arguments:
+                values: ["Songkran", "New Year", "Normal"]
 
   - name: dim_station
     columns:
@@ -33,7 +34,8 @@ models:
       - name: direction
         data_tests:
           - accepted_values:
-              values: ["outbound", "inbound", "other"]
+              arguments:
+                values: ["outbound", "inbound", "other"]
 
   - name: dim_user
     description: Customers with lifetime booking stats and a simple segment.
@@ -43,7 +45,8 @@ models:
       - name: customer_segment
         data_tests:
           - accepted_values:
-              values: ["frequent", "regular", "occasional", "no_trips"]
+              arguments:
+                values: ["frequent", "regular", "occasional", "no_trips"]
 
   - name: fact_bookings
     description: "Grain: one row per booking."
@@ -53,28 +56,33 @@ models:
       - name: user_id
         data_tests:
           - relationships:
-              to: ref('dim_user')
-              field: user_id
+              arguments:
+                to: ref('dim_user')
+                field: user_id
       - name: train_id
         data_tests:
           - relationships:
-              to: ref('dim_train')
-              field: train_id
+              arguments:
+                to: ref('dim_train')
+                field: train_id
       - name: route_key
         data_tests:
           - relationships:
-              to: ref('dim_route')
-              field: route_key
+              arguments:
+                to: ref('dim_route')
+                field: route_key
       - name: departure_date_key
         data_tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: booked_date_key
         data_tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: seats
         data_tests: [not_null]
 
@@ -86,8 +94,9 @@ models:
       - name: departure_date_key
         data_tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
+              arguments:
+                to: ref('dim_date')
+                field: date_key
 
   - name: mart_daily_route_kpis
     description: "Grain: one row per travel date and route. Feeds the dashboard."
