@@ -1,0 +1,22 @@
+name: trainbooker
+version: "1.0.0"
+config-version: 2
+profile: trainbooker
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  trainbooker:
+    staging:          # 1:1 with OLTP tables: rename, cast, light cleanup
+      +materialized: view
+      +schema: staging
+    intermediate:     # reusable building blocks (per-booking payments, seats)
+      +materialized: view
+      +schema: intermediate
+    marts:            # star schema + aggregates used by the dashboard
+      +materialized: table
+      +schema: marts

@@ -10,15 +10,17 @@ A train-ticket booking database for Thai rail routes, being extended step by ste
 |---|---|---|
 | 1 | Harden the OLTP schema: constraints, triggers, hashed passwords, Docker | ✅ Done |
 | 2 | Generate realistic data (100k bookings) and bulk-load it, with data-quality checks | ✅ Done |
-| 3 | ELT into a star-schema warehouse with dbt + data-quality tests | ⏳ Next |
-| 4 | Orchestration (Airflow) + CI with GitHub Actions | Planned |
+| 3 | Star-schema warehouse with dbt: 19 models, 66 tests | ✅ Done |
+| 4 | Orchestration (Airflow) + CI with GitHub Actions | ⏳ Next |
 | 5 | Dashboard: occupancy, route revenue, cancellation rate | Planned |
 
 ## Quick start
 
-Requires Docker and Python 3.10+ (standard library only — nothing to `pip install`).
+Requires Docker and Python 3.10+.
 
 ```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt     # dbt-postgres (the generator itself needs nothing)
 ./scripts/run_pipeline.sh
 ```
 
@@ -27,6 +29,7 @@ This one command:
 2. generates ~100k bookings as CSV files (`data/generated/`)
 3. loads them into Postgres in a single transaction (~8 s)
 4. runs the constraint tests and data-quality checks
+5. builds the dbt warehouse and runs its 66 tests (`dbt build`)
 
 Then explore:
 
@@ -102,6 +105,55 @@ All of these are covered by [`sql/tests/test_constraints.sql`](sql/tests/test_co
 | tickets | ~152,600 |
 | payments | ~98,500 |
 
+## Data warehouse with dbt (Phase 3)
+![dbt lineage graph](docs/lineage.png)
+
+The [`dbt/`](dbt/) project turns the OLTP tables into a star schema in three layers:
+
+```
+public (OLTP)          staging (views)        intermediate (views)       marts (tables)
+─────────────          ───────────────        ────────────────────       ──────────────
+users           ──►    stg_users        ─┐                          ┌──► dim_user
+trains          ──►    stg_trains       ─┤                          ├──► dim_train
+stations, lines ──►    stg_stations ... ─┤                          ├──► dim_station, dim_route
+                                         │                          ├──► dim_date
+schedules       ──►    stg_schedules    ─┤                          │
+bookings        ──►    stg_bookings     ─┼──► int_booking_seats    ─┼──► fact_bookings            (1 row / booking)
+tickets         ──►    stg_tickets      ─┤    int_booking_payments ─┼──► fact_schedule_occupancy  (1 row / departure)
+payments        ──►    stg_payments     ─┘                          └──► mart_daily_route_kpis    (1 row / day x route)
+```
+
+| Model | Grain | Used for |
+|---|---|---|
+| `fact_bookings` | booking | seats, gross / paid / refunded amount, failed payment attempts, lead time, status flags |
+| `fact_schedule_occupancy` | departure | seats sold vs. capacity, occupancy %, sold-out flag, revenue (includes departures with no bookings) |
+| `mart_daily_route_kpis` | travel date × route | the dashboard table: occupancy, sell-outs, cancellation rate, revenue |
+| `dim_date` | day | weekday / weekend, holiday period (Songkran, New Year) |
+| `dim_route` | origin → destination | route name, line, direction (`outbound` / `inbound` from the Bangkok hub) |
+| `dim_user` | customer | lifetime trips and revenue, segment (`frequent` / `regular` / `occasional` / `no_trips`) |
+
+**66 tests** run with `dbt build`:
+- *generic*: `unique`, `not_null`, `accepted_values`, and `relationships` from every fact key to its dimension
+- *singular* ([`dbt/tests/`](dbt/tests/)): the Phase 2 business rules, plus **reconciliation tests** that check that no money or rows are gained or lost between the OLTP tables and the marts (total paid revenue in source = `fact_bookings` = `fact_schedule_occupancy` = `mart_daily_route_kpis`)
+
+The password hash never leaves the OLTP database: `stg_users` doesn't select it.
+
+Run dbt on its own:
+
+```bash
+cd dbt
+dbt build --profiles-dir .                       # build all models + run all tests
+dbt docs generate --profiles-dir . && dbt docs serve --profiles-dir .   # browse the lineage graph
+```
+
+What the warehouse shows (default seed):
+
+| Question | Answer |
+|---|---|
+| Who brings the revenue? | 794 `frequent` users (10% of users) bring 45% of paid revenue |
+| How full are the trains? | Outbound occupancy averages 15% on normal days but 27% during Songkran, when one departure sells out completely |
+| Which direction earns more? | Outbound trips earn 2.4× inbound. The inbound timetable is midday-only and misses the commuter peaks |
+
 ## Highlight: journey planner with transfers
 
 [`sql/queries/example_queries.sql`](sql/queries/example_queries.sql) Q7 uses a **recursive CTE** to find every route between two stations, including changes between lines, with a minimum transfer time. Example: Nakhon Pathom → Don Mueang on AC trains only:
@@ -126,10 +178,12 @@ The course version answered this with hard-coded station names for one route; th
 
 ```
 ├── docker-compose.yml
-├── scripts/run_pipeline.sh   # generate -> load -> test, in one command
+├── requirements.txt          # dbt-postgres
+├── scripts/run_pipeline.sh   # generate -> load -> test -> dbt build, in one command
 ├── generator/
 │   └── generate_data.py      # synthetic booking history -> CSV
 ├── data/generated/           # CSV output (git-ignored, reproducible)
+├── dbt/                      # warehouse: staging -> intermediate -> marts, tests
 ├── sql/
 │   ├── init/                 # 01_schema.sql, 02_seed.sql — loaded automatically by Docker
 │   ├── load/                 # load_generated.sql — CSV -> staging -> tables

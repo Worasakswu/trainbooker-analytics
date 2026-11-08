@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: int_booking_seats
+    description: Number of seats (tickets) per booking.
+    columns:
+      - name: booking_id
+        data_tests: [unique, not_null]
+
+  - name: int_booking_payments
+    description: >
+      Payment outcome per booking: total paid, total refunded, failed attempts,
+      and the method/status of the payment that decided the outcome.
+    columns:
+      - name: booking_id
+        data_tests: [unique, not_null]

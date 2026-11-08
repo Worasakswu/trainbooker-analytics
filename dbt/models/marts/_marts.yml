@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: Calendar 2025-2026 with weekend and holiday-period flags.
+    columns:
+      - name: date_key
+        description: YYYYMMDD as an integer.
+        data_tests: [unique, not_null]
+      - name: holiday_period
+        data_tests:
+          - accepted_values:
+              values: ["Songkran", "New Year", "Normal"]
+
+  - name: dim_station
+    columns:
+      - name: station_id
+        data_tests: [unique, not_null]
+
+  - name: dim_train
+    columns:
+      - name: train_id
+        data_tests: [unique, not_null]
+
+  - name: dim_route
+    description: Origin -> destination pairs, with the line and direction relative to the Bangkok hub.
+    columns:
+      - name: route_key
+        description: origin_station_id * 1000 + destination_station_id
+        data_tests: [unique, not_null]
+      - name: line_name
+        data_tests: [not_null]
+      - name: direction
+        data_tests:
+          - accepted_values:
+              values: ["outbound", "inbound", "other"]
+
+  - name: dim_user
+    description: Customers with lifetime booking stats and a simple segment.
+    columns:
+      - name: user_id
+        data_tests: [unique, not_null]
+      - name: customer_segment
+        data_tests:
+          - accepted_values:
+              values: ["frequent", "regular", "occasional", "no_trips"]
+
+  - name: fact_bookings
+    description: "Grain: one row per booking."
+    columns:
+      - name: booking_id
+        data_tests: [unique, not_null]
+      - name: user_id
+        data_tests:
+          - relationships:
+              to: ref('dim_user')
+              field: user_id
+      - name: train_id
+        data_tests:
+          - relationships:
+              to: ref('dim_train')
+              field: train_id
+      - name: route_key
+        data_tests:
+          - relationships:
+              to: ref('dim_route')
+              field: route_key
+      - name: departure_date_key
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: booked_date_key
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+      - name: seats
+        data_tests: [not_null]
+
+  - name: fact_schedule_occupancy
+    description: "Grain: one row per scheduled departure, including departures with no bookings."
+    columns:
+      - name: schedule_id
+        data_tests: [unique, not_null]
+      - name: departure_date_key
+        data_tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+  - name: mart_daily_route_kpis
+    description: "Grain: one row per travel date and route. Feeds the dashboard."
+    columns:
+      - name: travel_date
+        data_tests: [not_null]

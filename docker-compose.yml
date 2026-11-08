@@ -10,7 +10,7 @@ services:
       PGTZ: Asia/Bangkok
     command: ["postgres", "-c", "timezone=Asia/Bangkok"]
     ports:
-      - "5433:5432"   # 5433 on the host so it doesn't clash with other Postgres containers
+      - "5544:5432"   # 5433 on the host so it doesn't clash with other Postgres containers
     volumes:
       - ./sql/init:/docker-entrypoint-initdb.d:ro   # runs 01_schema.sql then 02_seed.sql on first start
       - ./sql:/sql:ro                               # so psql inside the container can run any script

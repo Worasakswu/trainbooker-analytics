@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: stg_users
+    description: Customers. password_hash is intentionally excluded.
+    columns:
+      - name: user_id
+        data_tests: [unique, not_null]
+      - name: email
+        data_tests: [unique]
+
+  - name: stg_trains
+    columns:
+      - name: train_id
+        data_tests: [unique, not_null]
+      - name: train_type
+        data_tests:
+          - accepted_values:
+              values: ["AC", "FAN"]
+
+  - name: stg_stations
+    columns:
+      - name: station_id
+        data_tests: [unique, not_null]
+
+  - name: stg_lines
+    columns:
+      - name: line_id
+        data_tests: [unique, not_null]
+
+  - name: stg_line_stations
+    columns:
+      - name: station_id
+        data_tests:
+          - relationships:
+              to: ref('stg_stations')
+              field: station_id
+
+  - name: stg_schedules
+    columns:
+      - name: schedule_id
+        data_tests: [unique, not_null]
+      - name: train_id
+        data_tests:
+          - not_null
+          - relationships:
+              to: ref('stg_trains')
+              field: train_id
+
+  - name: stg_bookings
+    columns:
+      - name: booking_id
+        data_tests: [unique, not_null]
+      - name: booking_status
+        data_tests:
+          - accepted_values:
+              values: ["pending", "confirmed", "cancelled"]
+      - name: user_id
+        data_tests:
+          - relationships:
+              to: ref('stg_users')
+              field: user_id
+      - name: schedule_id
+        data_tests:
+          - relationships:
+              to: ref('stg_schedules')
+              field: schedule_id
+
+  - name: stg_tickets
+    columns:
+      - name: ticket_id
+        data_tests: [unique, not_null]
+      - name: booking_id
+        data_tests:
+          - relationships:
+              to: ref('stg_bookings')
+              field: booking_id
+
+  - name: stg_payments
+    columns:
+      - name: payment_id
+        data_tests: [unique, not_null]
+      - name: payment_status
+        data_tests:
+          - accepted_values:
+              values: ["paid", "failed", "refunded"]
+      - name: payment_method
+        data_tests:
+          - accepted_values:
+              values: ["qr_code", "cash", "credit_card", "mobile_banking"]

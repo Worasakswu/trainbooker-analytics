@@ -1,0 +1,14 @@
+# Local connection to the Docker Postgres from docker-compose.yml.
+# Override with env vars (TB_PG_HOST, TB_PG_PORT, ...) if needed.
+trainbooker:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('TB_PG_HOST', 'localhost') }}"
+      port: "{{ env_var('TB_PG_PORT', '5544') | as_number }}"
+      user: "{{ env_var('TB_PG_USER', 'trainbooker') }}"
+      password: "{{ env_var('TB_PG_PASSWORD', 'trainbooker') }}"
+      dbname: "{{ env_var('TB_PG_DB', 'trainbooker') }}"
+      schema: analytics
+      threads: 4

@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: oltp
+    description: TrainBooker operational database (loaded by sql/init and sql/load).
+    schema: public
+    tables:
+      - name: lines
+      - name: stations
+      - name: line_stations
+      - name: trains
+      - name: users
+      - name: schedules
+      - name: bookings
+      - name: tickets
+      - name: payments
