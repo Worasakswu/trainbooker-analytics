@@ -13,6 +13,8 @@ services:
       - "5433:5432"   # 5433 on the host so it doesn't clash with other Postgres containers
     volumes:
       - ./sql/init:/docker-entrypoint-initdb.d:ro   # runs 01_schema.sql then 02_seed.sql on first start
+      - ./sql:/sql:ro                               # so psql inside the container can run any script
+      - ./data:/data:ro                             # generated CSVs for sql/load/load_generated.sql
       - trainbooker_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U trainbooker -d trainbooker"]

@@ -5,3 +5,6 @@ __pycache__/
 target/
 dbt_packages/
 logs/
+
+# generated CSVs are reproducible from the generator (same --seed -> same data)
+data/generated/

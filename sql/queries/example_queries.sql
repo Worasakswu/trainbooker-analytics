@@ -92,8 +92,8 @@ GROUP BY l.line_name;
 
 
 -- Q7. Journey planner with transfers (recursive CTE)
--- Finds every way to get from one station to another using up to 3 legs,
--- with at least 10 minutes to change trains, and AC trains only.
+-- Finds every way to get from one station to another on a given day using
+-- up to 3 legs, with 10 minutes to 4 hours to change trains, AC trains only.
 -- The course version hard-coded the two legs Nakhon Pathom -> Krung Thep
 -- Aphiwat -> Don Mueang; this works for any pair of stations.
 WITH RECURSIVE
@@ -101,7 +101,9 @@ params AS (
     SELECT
         'นครปฐม'::text   AS from_station,
         'ดอนเมือง'::text AS to_station,
+        date '2026-03-10' AS travel_date,
         interval '10 minutes' AS min_transfer,
+        interval '4 hours'    AS max_transfer,
         3 AS max_legs
 ),
 legs AS (   -- every scheduled AC trip, with readable names
@@ -128,6 +130,7 @@ journeys AS (
         l.train_name || ' (' || l.origin_name || ' → ' || l.dest_name || ')' AS itinerary
     FROM legs l, params p
     WHERE l.origin_name = p.from_station
+      AND (l.departure_time AT TIME ZONE 'Asia/Bangkok')::date = p.travel_date
 
     UNION ALL
 
@@ -145,6 +148,7 @@ journeys AS (
     JOIN legs l ON l.origin_station_id = j.at_station
     CROSS JOIN params p
     WHERE l.departure_time >= j.arrive_time + p.min_transfer
+      AND l.departure_time <= j.arrive_time + p.max_transfer
       AND j.n_legs < p.max_legs
       AND NOT l.destination_station_id = ANY (j.visited)   -- no loops
 )
