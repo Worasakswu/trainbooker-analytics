@@ -1,0 +1,24 @@
+services:
+  db:
+    image: postgres:16
+    container_name: trainbooker-db
+    environment:
+      POSTGRES_USER: trainbooker
+      POSTGRES_PASSWORD: trainbooker   # local dev only
+      POSTGRES_DB: trainbooker
+      TZ: Asia/Bangkok
+      PGTZ: Asia/Bangkok
+    command: ["postgres", "-c", "timezone=Asia/Bangkok"]
+    ports:
+      - "5433:5432"   # 5433 on the host so it doesn't clash with other Postgres containers
+    volumes:
+      - ./sql/init:/docker-entrypoint-initdb.d:ro   # runs 01_schema.sql then 02_seed.sql on first start
+      - trainbooker_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trainbooker -d trainbooker"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  trainbooker_data:
